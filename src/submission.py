@@ -1,18 +1,8 @@
 from kaggle_environments.envs.football.helpers import *
 
-# @human_readable_agent wrapper modifies raw observations 
-# provided by the environment:
-# https://github.com/google-research/football/blob/master/gfootball/doc/observation.md#raw-observations
-# into a form easier to work with by humans.
-# Following modifications are applied:
-# - Action, PlayerRole and GameMode enums are introduced.
-# - 'sticky_actions' are turned into a set of active actions (Action enum)
-#    see usage example below.
-# - 'game_mode' is turned into GameMode enum.
-# - 'designated' field is removed, as it always equals to 'active'
-#    when a single player is controlled on the team.
-# - 'left_team_roles'/'right_team_roles' are turned into PlayerRole enums.
-# - Action enum is to be returned by the agent function.
+SHOOT_THRESH_X = 0.4
+SHOOT_THRESH_Y = 0.25
+
 @human_readable_agent
 def agent(obs):
     # Make sure player is running.
@@ -23,9 +13,24 @@ def agent(obs):
     controlled_player_pos = obs['left_team'][obs['active']]
     # Does the player we control have the ball?
     if obs['ball_owned_player'] == obs['active'] and obs['ball_owned_team'] == 0:
-        # Shot if we are 'close' to the goal (based on 'x' coordinate).
-        if controlled_player_pos[0] > 0.5:
-            return Action.Shot
+
+        # When player reaches the byline
+        if controlled_player_pos[0] > SHOOT_THRESH_X:
+
+            # Shot if player is close to the goal
+            if abs(controlled_player_pos[1]) < SHOOT_THRESH_Y:
+                return Action.Shot
+            # Cross if player is far from the goal
+            else:
+                # Stop sprinting
+                if Action.Sprint in obs['sticky_actions']:
+                    return Action.ReleaseSprint
+                # Turn toward goal
+                if Action.Right in obs['sticky_actions']:
+                    return Action.Top if controlled_player_pos[1] > 0 else Action.Bottom
+                # Cross into the box
+                return Action.HighPass
+
         # Run towards the goal otherwise.
         return Action.Right
     else:
