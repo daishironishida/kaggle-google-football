@@ -39,16 +39,16 @@ def agent(obs):
                 return Action.HighPass
 
         # Run towards the goal otherwise.
-        return sprint(Action.Right)
+        return sprint(obs, Action.Right)
     else:
         # Run towards the ball.
         if obs['ball'][0] > controlled_player_pos[0] + 0.05:
-            return sprint(Action.Right)
+            return sprint(obs, Action.Right)
         if obs['ball'][0] < controlled_player_pos[0] - 0.05:
-            return sprint(Action.Left)
+            return sprint(obs, Action.Left)
         if obs['ball'][1] > controlled_player_pos[1] + 0.05:
-            return sprint(Action.Bottom)
+            return sprint(obs, Action.Bottom)
         if obs['ball'][1] < controlled_player_pos[1] - 0.05:
-            return sprint(Action.Top)
+            return sprint(obs, Action.Top)
         # Try to take over the ball if close to the ball.
         return Action.Slide
