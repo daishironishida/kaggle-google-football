@@ -63,7 +63,7 @@ def agent(obs):
                 if Action.Right in obs['sticky_actions']:
                     return Action.Top if controlled_player_pos[1] > 0 else Action.Bottom
                 # Cross into the box
-                return Action.HighPass
+                return Action.ShortPass
 
         # Run towards the goal otherwise.
         return sprint(obs, Action.Right)
