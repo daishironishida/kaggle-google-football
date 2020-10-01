@@ -1,7 +1,10 @@
 from kaggle_environments.envs.football.helpers import *
+import math
 
 SHOOT_THRESH_X = 0.7
 SHOOT_THRESH_Y = 0.25
+
+DEFEND_TARGET_OFFSET = 0.05
 
 # Make sure player is sprinting
 def sprint(obs, action):
@@ -13,6 +16,30 @@ def sprint(obs, action):
         return Action.Sprint
     else:
         return Action.Idle
+
+# Get goalside of the ball
+def get_goalside_position(x, y):
+    ratio = DEFEND_TARGET_OFFSET / math.sqrt((x+1) ** 2 + y ** 2)
+    return (1 - ratio) * x - ratio, (1 - ratio) * y
+
+# Calculate angle in degrees
+# @return angle between -180 and 180
+def get_degree(x, y):
+    if x == 0:
+        return 90 if y > 0 else -90
+    base = math.atan(y / x) * 180 / math.pi
+
+    if x > 0:
+        return base
+    if y > 0:
+        return base + 180
+    if y < 0:
+        return base - 180
+
+# Calculate appropriate movement direction
+def get_movement_direction(x, y):
+    angle = get_degree(x, y)
+    return Action(((angle + 202.5) // 45) % 8 + 1)
 
 @human_readable_agent
 def agent(obs):
@@ -41,14 +68,11 @@ def agent(obs):
         # Run towards the goal otherwise.
         return sprint(obs, Action.Right)
     else:
-        # Run towards the ball.
-        if obs['ball'][0] > controlled_player_pos[0] + 0.05:
-            return sprint(obs, Action.Right)
-        if obs['ball'][0] < controlled_player_pos[0] - 0.05:
-            return sprint(obs, Action.Left)
-        if obs['ball'][1] > controlled_player_pos[1] + 0.05:
-            return sprint(obs, Action.Bottom)
-        if obs['ball'][1] < controlled_player_pos[1] - 0.05:
-            return sprint(obs, Action.Top)
-        # Try to take over the ball if close to the ball.
-        return Action.Slide
+        # get goalside of the ball
+        defend_target = get_goalside_position(obs['ball'][0], obs['ball'][1])
+
+        direction = get_movement_direction(
+            defend_target[0] - controlled_player_pos[0],
+            defend_target[1] - controlled_player_pos[1]
+        )
+        return sprint(obs, direction)
