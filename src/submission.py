@@ -1,6 +1,6 @@
 from kaggle_environments.envs.football.helpers import *
 
-SHOOT_THRESH_X = 0.4
+SHOOT_THRESH_X = 0.7
 SHOOT_THRESH_Y = 0.25
 
 # Make sure player is sprinting
