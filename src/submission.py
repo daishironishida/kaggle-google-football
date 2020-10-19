@@ -31,9 +31,9 @@ def get_degree(x, y):
 
     if x > 0:
         return base
-    if y > 0:
+    if y >= 0:
         return base + 180
-    if y < 0:
+    else:
         return base - 180
 
 # Calculate appropriate movement direction
