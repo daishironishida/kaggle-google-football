@@ -4,10 +4,17 @@ import math
 SHOOT_THRESH_X = 0.7
 SHOOT_THRESH_Y = 0.25
 
+GOALIE_CHARGE_THRESH = 0.85
+GOALIE_CHARGE_SHOOT_THRESH = 0.5
+
 DEFEND_TARGET_OFFSET = 0.05
+
+GOALIE_IDX = 0
 
 @human_readable_agent
 def agent(obs):
+
+    ###### HELPER FUNCTIONS ######
 
     # Make sure player is sprinting
     def sprint(action):
@@ -44,11 +51,24 @@ def agent(obs):
         angle = get_degree(x, y)
         return Action(((angle + 202.5) // 45) % 8 + 1)
 
+    # Get position of opponent's goalie
+    def get_goalie_position():
+        return obs['right_team'][GOALIE_IDX]
+
+    ###### EVALUATE POSITION ######
+
     controlled_player_pos = obs['left_team'][obs['active']]
 
     ###### IN POSSESSION ######
 
     if obs['ball_owned_player'] == obs['active'] and obs['ball_owned_team'] == 0:
+
+        # Shoot if goalie is off the line
+        if controlled_player_pos[0] > GOALIE_CHARGE_SHOOT_THRESH \
+            and get_goalie_position()[0] < GOALIE_CHARGE_THRESH \
+                and abs(controlled_player_pos[1]) < SHOOT_THRESH_Y:
+
+            return Action.Shot
 
         # When player reaches the byline
         if controlled_player_pos[0] > SHOOT_THRESH_X:
