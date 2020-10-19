@@ -45,7 +45,9 @@ def get_movement_direction(x, y):
 def agent(obs):
 
     controlled_player_pos = obs['left_team'][obs['active']]
-    # Does the player we control have the ball?
+
+    ###### IN POSSESSION ######
+
     if obs['ball_owned_player'] == obs['active'] and obs['ball_owned_team'] == 0:
 
         # When player reaches the byline
@@ -67,12 +69,18 @@ def agent(obs):
 
         # Run towards the goal otherwise.
         return sprint(obs, Action.Right)
-    else:
+
+    ###### OUT OF POSSESSION ######
+
+    if obs['ball_owned_team'] == 1:
         # get goalside of the ball
         defend_target = get_goalside_position(obs['ball'][0], obs['ball'][1])
+    else:
+        #run towards the ball
+        defend_target = (obs['ball'][0], obs['ball'][1])
 
-        direction = get_movement_direction(
-            defend_target[0] - controlled_player_pos[0],
-            defend_target[1] - controlled_player_pos[1]
-        )
-        return sprint(obs, direction)
+    direction = get_movement_direction(
+        defend_target[0] - controlled_player_pos[0],
+        defend_target[1] - controlled_player_pos[1]
+    )
+    return sprint(obs, direction)
