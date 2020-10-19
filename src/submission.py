@@ -6,43 +6,43 @@ SHOOT_THRESH_Y = 0.25
 
 DEFEND_TARGET_OFFSET = 0.05
 
-# Make sure player is sprinting
-def sprint(obs, action):
-    # Change direction first
-    if action not in obs['sticky_actions']:
-        return action
-    # Start sprinting
-    if Action.Sprint not in obs['sticky_actions']:
-        return Action.Sprint
-    else:
-        return Action.Idle
-
-# Get goalside of the ball
-def get_goalside_position(x, y):
-    ratio = DEFEND_TARGET_OFFSET / math.sqrt((x+1) ** 2 + y ** 2)
-    return (1 - ratio) * x - ratio, (1 - ratio) * y
-
-# Calculate angle in degrees
-# @return angle between -180 and 180
-def get_degree(x, y):
-    if x == 0:
-        return 90 if y > 0 else -90
-    base = math.atan(y / x) * 180 / math.pi
-
-    if x > 0:
-        return base
-    if y >= 0:
-        return base + 180
-    else:
-        return base - 180
-
-# Calculate appropriate movement direction
-def get_movement_direction(x, y):
-    angle = get_degree(x, y)
-    return Action(((angle + 202.5) // 45) % 8 + 1)
-
 @human_readable_agent
 def agent(obs):
+
+    # Make sure player is sprinting
+    def sprint(action):
+        # Change direction first
+        if action not in obs['sticky_actions']:
+            return action
+        # Start sprinting
+        if Action.Sprint not in obs['sticky_actions']:
+            return Action.Sprint
+        else:
+            return Action.Idle
+
+    # Get goalside of the ball
+    def get_goalside_position(x, y):
+        ratio = DEFEND_TARGET_OFFSET / math.sqrt((x+1) ** 2 + y ** 2)
+        return (1 - ratio) * x - ratio, (1 - ratio) * y
+
+    # Calculate angle in degrees
+    # @return angle between -180 and 180
+    def get_degree(x, y):
+        if x == 0:
+            return 90 if y > 0 else -90
+        base = math.atan(y / x) * 180 / math.pi
+
+        if x > 0:
+            return base
+        if y >= 0:
+            return base + 180
+        else:
+            return base - 180
+
+    # Calculate appropriate movement direction
+    def get_movement_direction(x, y):
+        angle = get_degree(x, y)
+        return Action(((angle + 202.5) // 45) % 8 + 1)
 
     controlled_player_pos = obs['left_team'][obs['active']]
 
@@ -68,7 +68,7 @@ def agent(obs):
                 return Action.ShortPass
 
         # Run towards the goal otherwise.
-        return sprint(obs, Action.Right)
+        return sprint(Action.Right)
 
     ###### OUT OF POSSESSION ######
 
@@ -83,4 +83,4 @@ def agent(obs):
         defend_target[0] - controlled_player_pos[0],
         defend_target[1] - controlled_player_pos[1]
     )
-    return sprint(obs, direction)
+    return sprint(direction)
