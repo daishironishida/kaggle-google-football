@@ -20,7 +20,10 @@ def agent(obs):
     def sprint(action):
         # Change direction first
         if action not in obs['sticky_actions']:
-            return action
+            if Action.Sprint in obs['sticky_actions']:
+                return Action.ReleaseSprint
+            else:
+                return action
         # Start sprinting
         if Action.Sprint not in obs['sticky_actions']:
             return Action.Sprint
