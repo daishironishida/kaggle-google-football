@@ -29,6 +29,20 @@ def agent(obs):
             return Action.Sprint
         else:
             return Action.Idle
+    
+    # Shoot
+    def shoot(pos):
+        # Turn toward goal
+        action = get_movement_direction(1 - pos[0], -pos[1])
+
+        # Change direction first
+        if action not in obs['sticky_actions']:
+            if Action.Sprint in obs['sticky_actions']:
+                return Action.ReleaseSprint
+            else:
+                return action
+        # Shoot
+        return Action.Shot
 
     # Get goalside of the ball
     def get_goalside_position(x, y):
@@ -71,14 +85,14 @@ def agent(obs):
             and abs(controlled_player_pos[1]) < SHOOT_THRESH_Y \
                 and goalie_is_charging():
 
-            return Action.Shot
+            return shoot(controlled_player_pos)
 
         # When player reaches the byline
         if controlled_player_pos[0] > SHOOT_THRESH_X:
 
             # Shot if player is close to the goal
             if abs(controlled_player_pos[1]) < SHOOT_THRESH_Y:
-                return Action.Shot
+                return shoot(controlled_player_pos)
             # Cross if player is far from the goal
             else:
                 # Stop sprinting
