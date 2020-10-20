@@ -2,7 +2,7 @@ from kaggle_environments.envs.football.helpers import *
 import math
 
 SHOOT_THRESH_X = 0.7
-SHOOT_THRESH_Y = 0.25
+SHOOT_THRESH_Y = 0.20
 
 GOALIE_CHARGE_THRESH = 0.01
 GOALIE_CHARGE_SHOOT_THRESH = 0.5
