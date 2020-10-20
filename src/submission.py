@@ -11,6 +11,8 @@ DEFEND_TARGET_OFFSET = 0.05
 
 GOALIE_IDX = 0
 
+BALL_SPEED_FACTOR = 1
+
 @human_readable_agent
 def agent(obs):
 
@@ -109,12 +111,18 @@ def agent(obs):
 
     ###### OUT OF POSSESSION ######
 
+    # estimate future position of ball
+    ball_target = (
+        obs['ball'][0] + obs['ball_direction'][0] * BALL_SPEED_FACTOR,
+        obs['ball'][1] + obs['ball_direction'][1] * BALL_SPEED_FACTOR
+    )
+
     if obs['ball_owned_team'] == 1:
         # get goalside of the ball
-        defend_target = get_goalside_position(obs['ball'][0], obs['ball'][1])
+        defend_target = get_goalside_position(*ball_target)
     else:
-        #run towards the ball
-        defend_target = (obs['ball'][0], obs['ball'][1])
+        # run towards the ball
+        defend_target = ball_target
 
     direction = get_movement_direction(
         defend_target[0] - controlled_player_pos[0],
