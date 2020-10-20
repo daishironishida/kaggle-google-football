@@ -4,7 +4,7 @@ import math
 SHOOT_THRESH_X = 0.7
 SHOOT_THRESH_Y = 0.25
 
-GOALIE_CHARGE_THRESH = 0.85
+GOALIE_CHARGE_THRESH = 0.01
 GOALIE_CHARGE_SHOOT_THRESH = 0.5
 
 DEFEND_TARGET_OFFSET = 0.05
@@ -52,8 +52,8 @@ def agent(obs):
         return Action(((angle + 202.5) // 45) % 8 + 1)
 
     # Get position of opponent's goalie
-    def get_goalie_position():
-        return obs['right_team'][GOALIE_IDX]
+    def goalie_is_charging():
+        return obs['right_team_direction'][GOALIE_IDX][0] < -GOALIE_CHARGE_THRESH
 
     ###### EVALUATE POSITION ######
 
@@ -65,8 +65,8 @@ def agent(obs):
 
         # Shoot if goalie is off the line
         if controlled_player_pos[0] > GOALIE_CHARGE_SHOOT_THRESH \
-            and get_goalie_position()[0] < GOALIE_CHARGE_THRESH \
-                and abs(controlled_player_pos[1]) < SHOOT_THRESH_Y:
+            and abs(controlled_player_pos[1]) < SHOOT_THRESH_Y \
+                and goalie_is_charging():
 
             return Action.Shot
 
