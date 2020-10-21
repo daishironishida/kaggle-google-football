@@ -34,6 +34,8 @@ def agent(obs):
     
     # Shoot
     def shoot(pos):
+        return Action.Shot
+
         # Turn toward goal
         action = get_movement_direction(1 - pos[0], -pos[1])
 
