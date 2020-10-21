@@ -16,7 +16,7 @@ GOALIE_IDX = 0
 
 BALL_SPEED_FACTOR = 1
 
-MARK_DISTANCE_THRESH = 0.05
+MARK_DISTANCE_THRESH = 0.1
 
 @human_readable_agent
 def agent(obs):
