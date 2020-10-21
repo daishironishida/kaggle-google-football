@@ -1,6 +1,9 @@
 from kaggle_environments.envs.football.helpers import *
 import math
 
+GOAL_COORDS_SELF = (-1, 0)
+GOAL_COORDS_OPPOSITION = (1, 0)
+
 SHOOT_THRESH_X = 0.7
 SHOOT_THRESH_Y = 0.20
 
@@ -13,10 +16,16 @@ GOALIE_IDX = 0
 
 BALL_SPEED_FACTOR = 1
 
+MARK_DISTANCE_THRESH = 0.05
+
 @human_readable_agent
 def agent(obs):
 
     ###### HELPER FUNCTIONS ######
+
+    # Get distance
+    def distance(pos1, pos2):
+        return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)
 
     # Make sure player is sprinting
     def sprint(action):
@@ -34,10 +43,8 @@ def agent(obs):
     
     # Shoot
     def shoot(pos):
-        return Action.Shot
-
         # Turn toward goal
-        action = get_movement_direction(1 - pos[0], -pos[1])
+        action = get_movement_direction(GOAL_COORDS_OPPOSITION, pos)
 
         # Change direction first
         if action not in obs['sticky_actions']:
@@ -48,10 +55,18 @@ def agent(obs):
         # Shoot
         return Action.Shot
 
+    # Directions blocked by opposition
+    def get_blocked_directions(pos):
+        directions = set()
+        for opposition in obs['right_team']:
+            if distance(pos, opposition) < MARK_DISTANCE_THRESH:
+                directions.add(get_movement_direction(opposition, pos))
+        return directions
+
     # Get goalside of the ball
-    def get_goalside_position(x, y):
-        ratio = DEFEND_TARGET_OFFSET / math.sqrt((x+1) ** 2 + y ** 2)
-        return (1 - ratio) * x - ratio, (1 - ratio) * y
+    def get_goalside_position(pos):
+        ratio = DEFEND_TARGET_OFFSET / distance(pos, GOAL_COORDS_SELF)
+        return (1 - ratio) * pos[0] - ratio, (1 - ratio) * pos[1]
 
     # Calculate angle in degrees
     # @return angle between -180 and 180
@@ -67,9 +82,13 @@ def agent(obs):
         else:
             return base - 180
 
-    # Calculate appropriate movement direction
-    def get_movement_direction(x, y):
-        angle = get_degree(x, y)
+    # Calculate appropriate movement direction from two positions
+    def get_movement_direction(pos0, pos1):
+        return get_movement_direction_from_vec((pos0[0] - pos1[0], pos0[1] - pos1[1]))
+
+    # Calculate appropriate movement direction from vector
+    def get_movement_direction_from_vec(vec):
+        angle = get_degree(vec[0], vec[1])
         return Action(((angle + 202.5) // 45) % 8 + 1)
 
     # Get position of opponent's goalie
@@ -108,6 +127,11 @@ def agent(obs):
                 # Cross into the box
                 return Action.ShortPass
 
+        # Check if opposition is in front of player
+        if Action.Right in get_blocked_directions(controlled_player_pos):
+            # Pass the ball
+            return Action.ShortPass
+
         # Run towards the goal otherwise.
         return sprint(Action.Right)
 
@@ -121,13 +145,10 @@ def agent(obs):
 
     if obs['ball_owned_team'] == 1:
         # get goalside of the ball
-        defend_target = get_goalside_position(*ball_target)
+        defend_target = get_goalside_position(ball_target)
     else:
         # run towards the ball
         defend_target = ball_target
 
-    direction = get_movement_direction(
-        defend_target[0] - controlled_player_pos[0],
-        defend_target[1] - controlled_player_pos[1]
-    )
+    direction = get_movement_direction(defend_target, controlled_player_pos)
     return sprint(direction)
