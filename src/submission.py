@@ -28,9 +28,9 @@ def agent(obs):
         return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)
 
     # Make sure player is sprinting
-    def sprint(action):
+    def sprint(action, velocity):
         # Change direction first
-        if action not in obs['sticky_actions']:
+        if get_movement_direction_from_vec(velocity) != action:
             if Action.Sprint in obs['sticky_actions']:
                 return Action.ReleaseSprint
             else:
@@ -39,7 +39,7 @@ def agent(obs):
         if Action.Sprint not in obs['sticky_actions']:
             return Action.Sprint
         else:
-            return Action.Idle
+            return action
     
     # Shoot
     def shoot(pos):
@@ -98,6 +98,7 @@ def agent(obs):
     ###### EVALUATE POSITION ######
 
     controlled_player_pos = obs['left_team'][obs['active']]
+    controlled_player_vel = obs['left_team_direction'][obs['active']]
 
     ###### IN POSSESSION ######
 
@@ -133,7 +134,7 @@ def agent(obs):
             return Action.ShortPass
 
         # Run towards the goal otherwise.
-        return sprint(Action.Right)
+        return sprint(Action.Right, controlled_player_vel)
 
     ###### OUT OF POSSESSION ######
 
@@ -151,4 +152,4 @@ def agent(obs):
         defend_target = ball_target
 
     direction = get_movement_direction(defend_target, controlled_player_pos)
-    return sprint(direction)
+    return sprint(direction, controlled_player_vel)
